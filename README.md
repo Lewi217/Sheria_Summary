@@ -18,8 +18,8 @@ A RAG (Retrieval-Augmented Generation) backend that lets you upload any Kenyan l
 |---|---|
 | Framework | Spring Boot 4.0.6 |
 | AI / RAG | Spring AI 2.0.0-M4 |
-| LLM | Groq `llama-3.3-70b-versatile` |
-| Embeddings | Groq `nomic-embed-text-v1.5` (768 dims) |
+| LLM | Azure OpenAI `gpt-4.1` |
+| Embeddings | Azure OpenAI `text-embedding-3-large` (1536 dims) |
 | Vector Store | Neon PostgreSQL + pgvector |
 | PDF Parsing | Spring AI PDF Document Reader |
 | Deployment | Docker + Docker Compose (DigitalOcean) |
@@ -53,7 +53,7 @@ A RAG (Retrieval-Augmented Generation) backend that lets you upload any Kenyan l
 - Java 17+
 - Maven 3.9+
 - A [Neon](https://neon.tech) PostgreSQL database (with pgvector enabled)
-- A [Groq](https://console.groq.com) API key
+- An [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service) resource with `gpt-4.1` and `text-embedding-3-large` deployments
 
 ### 1. Clone the repository
 
@@ -70,7 +70,10 @@ Create `src/main/resources/keys.properties` (this file is gitignored — never c
 DB_URL=jdbc:postgresql://<your-neon-host>/neondb?sslmode=require
 DB_USERNAME=neondb_owner
 DB_PASSWORD=your_neon_password
-GROQ_API_KEY=your_groq_api_key
+AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+AZURE_OPENAI_ENDPOINT=https://your-resource-name.cognitiveservices.azure.com/
+AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
 ```
 
 ### 3. Run locally
@@ -155,7 +158,10 @@ Accept: text/event-stream
 DB_URL=jdbc:postgresql://<your-neon-host>/neondb?sslmode=require
 DB_USERNAME=neondb_owner
 DB_PASSWORD=your_password
-GROQ_API_KEY=your_groq_key
+AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+AZURE_OPENAI_ENDPOINT=https://your-resource-name.cognitiveservices.azure.com/
+AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
 ```
 
 ### 2. Build and run
@@ -178,13 +184,13 @@ docker-compose logs -f sheria-summary
 Upload PDF
     └── Extract text (page by page)
         └── Chunk into ~512 token segments
-            └── Embed each chunk  →  Groq nomic-embed-text-v1.5
+            └── Embed each chunk  →  Azure OpenAI text-embedding-3-large
                 └── Store vectors in Neon pgvector
 
 Ask a Question
     └── Embed the question
         └── Find top-6 similar chunks (cosine similarity)
-            └── Send chunks + question to Groq LLaMA 3.3
+            └── Send chunks + question to Azure OpenAI gpt-4.1
                 └── Return answer with section citations
 ```
 
