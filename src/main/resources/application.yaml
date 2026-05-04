@@ -5,6 +5,11 @@ spring:
   config:
     import: classpath:keys.properties
 
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -35,22 +40,24 @@ spring:
       max-request-size: 55MB
 
   ai:
-    openai:
-      api-key: ${GROQ_API_KEY}
-      base-url: https://api.groq.com/openai
-      chat:
-        options:
-          model: llama-3.3-70b-versatile
-          temperature: 0.1
-          max-tokens: 2048
-      embedding:
-        options:
-          model: nomic-embed-text-v1.5
+    azure:
+      openai:
+        api-key: ${AZURE_OPENAI_API_KEY}
+        endpoint: ${AZURE_OPENAI_ENDPOINT}
+        chat:
+          options:
+            deployment-name: ${AZURE_OPENAI_CHAT_DEPLOYMENT}
+            temperature: 0.1
+            max-tokens: 2048
+        embedding:
+          options:
+            deployment-name: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+            dimensions: 1536
 
     vectorstore:
       pgvector:
         initialize-schema: true
-        dimensions: 768
+        dimensions: 1536
         distance-type: COSINE_DISTANCE
         index-type: HNSW
 
