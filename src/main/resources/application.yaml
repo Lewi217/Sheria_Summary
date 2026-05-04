@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: SheriaSummary
+
+  config:
+    import: classpath:keys.properties
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 55MB
+
+  ai:
+    openai:
+      api-key: ${GROQ_API_KEY}
+      base-url: https://api.groq.com/openai
+      chat:
+        options:
+          model: llama-3.3-70b-versatile
+          temperature: 0.1
+          max-tokens: 2048
+      embedding:
+        options:
+          model: nomic-embed-text-v1.5
+
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 768
+        distance-type: COSINE_DISTANCE
+        index-type: HNSW
+
+server:
+  port: 8079
+
+logging:
+  level:
+    com.DevLewi.SheriaSummary: INFO
+    org.springframework.ai: INFO
