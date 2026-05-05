@@ -1,14 +1,12 @@
 # Build stage
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 
-COPY mvnw .
-COPY .mvn .mvn
 COPY pom.xml .
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B --no-transfer-progress
+RUN mvn dependency:go-offline -B --no-transfer-progress
 
 COPY src src
-RUN ./mvnw package -DskipTests --no-transfer-progress
+RUN mvn package -DskipTests --no-transfer-progress
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
