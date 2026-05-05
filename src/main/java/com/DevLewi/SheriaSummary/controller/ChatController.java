@@ -3,10 +3,10 @@ package com.DevLewi.SheriaSummary.controller;
 import com.DevLewi.SheriaSummary.dto.ChatRequest;
 import com.DevLewi.SheriaSummary.dto.ChatResponse;
 import com.DevLewi.SheriaSummary.service.ChatService;
-import com.DevLewi.SheriaSummary.service.impl.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -23,7 +23,18 @@ public class ChatController {
     }
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamChat(@RequestBody ChatRequest request) {
-        return chatService.streamChat(request);
+    public Flux<ServerSentEvent<String>> streamChat(@RequestBody ChatRequest request) {
+        Flux<ServerSentEvent<String>> tokens = chatService.streamChat(request)
+                .map(token -> ServerSentEvent.<String>builder()
+                        .event("token")
+                        .data(token)
+                        .build());
+
+        ServerSentEvent<String> done = ServerSentEvent.<String>builder()
+                .event("done")
+                .data("[DONE]")
+                .build();
+
+        return tokens.concatWith(Flux.just(done));
     }
 }

@@ -3,12 +3,7 @@ spring:
     name: SheriaSummary
 
   config:
-    import: classpath:keys.properties
-
-  autoconfigure:
-    exclude:
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+    import: optional:classpath:keys.properties
 
   datasource:
     url: ${DB_URL}

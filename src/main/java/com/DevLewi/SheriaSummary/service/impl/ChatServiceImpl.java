@@ -54,11 +54,16 @@ public class ChatServiceImpl implements ChatService {
                 Question: %s
                 """.formatted(context, request.getQuestion());
 
-        String answer = chatClient.prompt()
+        String raw = chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(userPrompt)
                 .call()
                 .content();
+
+        List<String> answer = raw.lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty())
+                .collect(Collectors.toList());
 
         return ChatResponse.builder()
                 .answer(answer)

@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @Builder
 public class ChatResponse {
-    private String answer;
+    private List<String> answer;
     private List<String> sources;
     private int chunksRetrieved;
 }
