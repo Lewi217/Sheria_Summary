@@ -56,6 +56,10 @@ spring:
         distance-type: COSINE_DISTANCE
         index-type: HNSW
 
+spring:
+  main:
+    web-application-type: servlet
+
 server:
   port: 8079
 

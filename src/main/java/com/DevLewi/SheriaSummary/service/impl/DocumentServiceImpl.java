@@ -11,13 +11,11 @@ import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -41,62 +39,60 @@ public class DocumentServiceImpl implements DocumentService {
             throw new IllegalArgumentException("Only PDF files are supported");
         }
 
-        Path tempFile = Files.createTempFile("sheria-", ".pdf");
-        try {
-            file.transferTo(tempFile);
+        byte[] pdfBytes = file.getBytes();
+        ByteArrayResource pdfResource = new ByteArrayResource(pdfBytes) {
+            @Override
+            public String getFilename() {
+                return filename;
+            }
+        };
 
-            var config = PdfDocumentReaderConfig.builder()
-                    .withPagesPerDocument(1)
-                    .build();
+        var config = PdfDocumentReaderConfig.builder()
+                .withPagesPerDocument(1)
+                .build();
 
-            var pdfReader = new PagePdfDocumentReader(
-                    new FileSystemResource(tempFile.toFile()),
-                    config
-            );
+        var pdfReader = new PagePdfDocumentReader(pdfResource, config);
 
-            List<Document> rawDocs = pdfReader.read();
-            log.info("Read {} pages from {}", rawDocs.size(), filename);
+        List<Document> rawDocs = pdfReader.read();
+        log.info("Read {} pages from {}", rawDocs.size(), filename);
 
-            String docId = UUID.randomUUID().toString();
+        String docId = UUID.randomUUID().toString();
 
-            rawDocs.forEach(doc -> {
-                doc.getMetadata().put("documentId", docId);
-                doc.getMetadata().put("filename", filename);
-                doc.getMetadata().put("source", filename);
-            });
+        rawDocs.forEach(doc -> {
+            doc.getMetadata().put("documentId", docId);
+            doc.getMetadata().put("filename", filename);
+            doc.getMetadata().put("source", filename);
+        });
 
-            var splitter = TokenTextSplitter.builder()
-                    .withChunkSize(512)
-                    .withMinChunkSizeChars(128)
-                    .withMinChunkLengthToEmbed(5)
-                    .withMaxNumChunks(10000)
-                    .withKeepSeparator(true)
-                    .build();
-            List<Document> chunks = splitter.apply(rawDocs);
-            log.info("Split into {} chunks for {}", chunks.size(), filename);
+        var splitter = TokenTextSplitter.builder()
+                .withChunkSize(512)
+                .withMinChunkSizeChars(128)
+                .withMinChunkLengthToEmbed(5)
+                .withMaxNumChunks(10000)
+                .withKeepSeparator(true)
+                .build();
+        List<Document> chunks = splitter.apply(rawDocs);
+        log.info("Split into {} chunks for {}", chunks.size(), filename);
 
-            vectorStore.add(chunks);
+        vectorStore.add(chunks);
 
-            DocumentRecord record = DocumentRecord.builder()
-                    .id(docId)
-                    .filename(filename)
-                    .uploadTime(LocalDateTime.now())
-                    .chunkCount(chunks.size())
-                    .fileSize(file.getSize())
-                    .build();
+        DocumentRecord record = DocumentRecord.builder()
+                .id(docId)
+                .filename(filename)
+                .uploadTime(LocalDateTime.now())
+                .chunkCount(chunks.size())
+                .fileSize(file.getSize())
+                .build();
 
-            documentRepository.save(record);
-            log.info("Saved document metadata for {}", filename);
+        documentRepository.save(record);
+        log.info("Saved document metadata for {}", filename);
 
-            return UploadResponse.builder()
-                    .documentId(docId)
-                    .filename(filename)
-                    .chunksCreated(chunks.size())
-                    .message("Document ingested successfully. Ready for querying.")
-                    .build();
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        return UploadResponse.builder()
+                .documentId(docId)
+                .filename(filename)
+                .chunksCreated(chunks.size())
+                .message("Document ingested successfully. Ready for querying.")
+                .build();
     }
 
     @Override
