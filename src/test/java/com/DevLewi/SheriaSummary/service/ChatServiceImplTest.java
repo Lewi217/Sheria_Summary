@@ -67,22 +67,22 @@ class ChatServiceImplTest {
 
     @Test
     void buildSourcesIncludesPageWhenPresent() {
-        Document doc = mockDoc("text", "act.pdf", 5);
+        Document doc = mockSourceDoc("act.pdf", 5);
         List<String> sources = service.buildSources(List.of(doc));
         assertEquals(List.of("act.pdf - Page 5"), sources);
     }
 
     @Test
     void buildSourcesOmitsPageWhenAbsent() {
-        Document doc = mockDocNoPage("text", "act.pdf");
+        Document doc = mockSourceDocNoPage("act.pdf");
         List<String> sources = service.buildSources(List.of(doc));
         assertEquals(List.of("act.pdf"), sources);
     }
 
     @Test
     void buildSourcesDeduplicates() {
-        Document doc1 = mockDoc("text1", "act.pdf", 3);
-        Document doc2 = mockDoc("text2", "act.pdf", 3);
+        Document doc1 = mockSourceDoc("act.pdf", 3);
+        Document doc2 = mockSourceDoc("act.pdf", 3);
         List<String> sources = service.buildSources(List.of(doc1, doc2));
         assertEquals(1, sources.size());
     }
@@ -110,6 +110,7 @@ class ChatServiceImplTest {
 
     // --- helpers ---
 
+    // buildContext tests: need both getText() and getMetadata()
     private Document mockDoc(String text, String filename, int page) {
         Document doc = mock(Document.class);
         when(doc.getText()).thenReturn(text);
@@ -120,6 +121,19 @@ class ChatServiceImplTest {
     private Document mockDocNoPage(String text, String filename) {
         Document doc = mock(Document.class);
         when(doc.getText()).thenReturn(text);
+        when(doc.getMetadata()).thenReturn(Map.of("filename", filename));
+        return doc;
+    }
+
+    // buildSources tests: only need getMetadata()
+    private Document mockSourceDoc(String filename, int page) {
+        Document doc = mock(Document.class);
+        when(doc.getMetadata()).thenReturn(Map.of("filename", filename, "page_number", page));
+        return doc;
+    }
+
+    private Document mockSourceDocNoPage(String filename) {
+        Document doc = mock(Document.class);
         when(doc.getMetadata()).thenReturn(Map.of("filename", filename));
         return doc;
     }
