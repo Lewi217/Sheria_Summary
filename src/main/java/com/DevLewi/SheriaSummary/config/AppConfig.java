@@ -23,7 +23,6 @@ public class AppConfig {
             try {
                 jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
             } catch (Exception e) {
-                // Extension might already exist or insufficient privileges
             }
         };
     }
