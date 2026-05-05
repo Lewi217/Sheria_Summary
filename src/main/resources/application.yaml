@@ -2,6 +2,9 @@ spring:
   application:
     name: SheriaSummary
 
+  main:
+    web-application-type: servlet
+
   config:
     import: optional:classpath:keys.properties
 
@@ -55,10 +58,6 @@ spring:
         dimensions: 1536
         distance-type: COSINE_DISTANCE
         index-type: HNSW
-
-spring:
-  main:
-    web-application-type: servlet
 
 server:
   port: 8079
